@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Secrets et config
+.env
+config/gcp-credentials.json
+.streamlit/secrets.toml
+*.json
+!config/config.yaml
+!package.json
+
+# NOUVEAU : Données locales (éviter de commit des fichiers volumineux)
+data/
+*.parquet
+*.csv
+*.xlsx
+*.zip
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# NOUVEAU : Fichiers temporaires du pipeline
+temp/
+tmp/
+*.tmp
+*.bak
+
+# NOUVEAU : Notebooks Jupyter (si tu en utilises)
+.ipynb_checkpoints/
+*.ipynb
+
+# NOUVEAU : Documentation générée
+docs/_build/
+site/

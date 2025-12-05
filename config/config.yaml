@@ -1,0 +1,98 @@
+# ============================================================================
+# Configuration Pipeline ETL - Organisation par Source puis Date
+# ============================================================================
+
+# Google Cloud Platform
+gcp:
+  project_id: "projet-big-data-477611"
+  region: "europe-west1"
+  credentials_path: "config/gcp-credentials.json"
+
+# Cloud Storage
+storage:
+  bucket_name: "bucket-projet-big-data"
+  
+  # Organisation : source → année-mois → fichiers
+  structure: "{raw_folder}/{year}-{month}/{source}__{date}_{time}.parquet"
+  # Résultat : raw_data/ratios_inpi/2025-12/ratios_inpi_2025-12-03_14-30-15.parquet
+  
+  raw_folder: "raw_data"
+
+# BigQuery
+bigquery:
+  dataset: "production_data"
+  
+  # Tables brutes (raw) - Pattern uniquement
+  raw_tables:
+    pattern: "{source}_raw"  # ratios_inpi → ratios_inpi
+  
+  # Tables transformées - Pattern uniquement
+  transformed_tables:
+    pattern: "{source}_clean"  # ratios_inpi → ratios_inpi_clean
+  
+  # Vues de transformation
+  views:
+    ratios_cleaned: "v_ratios_cleaned"
+    stock_cleaned: "v_stock_cleaned"
+    looker: "v_looker_studio"
+
+
+
+# Sources de données (avec noms explicites)
+data_sources:
+  sources:
+    - name: "ratios_inpi"
+      description: "Ratios financiers INPI - BCE"
+      url: "https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/ratios_inpi_bce/exports/parquet?lang=fr&timezone=UTC"
+      active: true
+    
+    - name: "stock_entreprises"
+      description: "Stock des unités légales"
+      url: "https://www.data.gouv.fr/fr/datasets/r/350182c9-148a-46e0-8389-76c2ec1374a3"
+      active: true
+
+# Colonnes à garder
+columns:
+  id: "siren"
+  keep:
+    - siren
+    - trancheEffectifsUniteLegale
+    - categorieEntreprise
+    - etatAdministratifUniteLegale
+    - categorieJuridiqueUniteLegale
+    - activitePrincipaleUniteLegale
+    - nomenclatureActivitePrincipaleUniteLegale
+    - economieSocialeSolidaireUniteLegale
+    - chiffre_d_affaires
+    - marge_brute
+    - ebe
+    - ebit
+    - resultat_net
+    - taux_d_endettement
+    - ratio_de_liquidite
+    - ratio_de_vetuste
+    - autonomie_financiere
+    - poids_bfr_exploitation_sur_ca
+    - couverture_des_interets
+    - caf_sur_ca
+    - capacite_de_remboursement
+    - marge_ebe
+    - resultat_courant_avant_impots_sur_ca
+    - poids_bfr_exploitation_sur_ca_jours
+    - rotation_des_stocks_jours
+    - credit_clients_jours
+    - credit_fournisseurs_jours
+    - type_bilan
+
+# Historisation (SIMPLE)
+historique:
+  activer: true
+  colonne_date: "extraction_date"
+  colonne_timestamp: "extraction_timestamp"
+  garder_doublons: false  # true = garder tout, false = garder dernier seulement
+
+# Paramètres d'exécution
+execution:
+  timeout_seconds: 540
+  retry_attempts: 3
+  log_level: "INFO"
