@@ -61,7 +61,7 @@ def run_pipeline(
     
     # ÉTAPE 1 : Téléchargement
     if not skip_download:
-        logger.info("\n📥 ÉTAPE 1/3 : Téléchargement des données")
+        logger.info("\nÉTAPE 1/3 : Téléchargement des données")
         logger.info("-" * 80)
         
         try:
@@ -69,36 +69,36 @@ def run_pipeline(
             step1_success = all(resultats.values()) if resultats else False
             
             if step1_success:
-                logger.info("✅ Étape 1 : Téléchargement réussi")
+                logger.info("Étape 1 : Téléchargement réussi")
             else:
-                logger.error("❌ Étape 1 : Échec du téléchargement")
+                logger.error("Étape 1 : Échec du téléchargement")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Étape 1 : Erreur - {e}")
+            logger.error(f"Étape 1 : Erreur - {e}")
             return False
     else:
-        logger.info("\n⏭️  Étape 1 : Téléchargement ignoré")
+        logger.info("\n⏭Étape 1 : Téléchargement ignoré")
     
     # ÉTAPE 2 : Chargement BigQuery
     if not skip_load:
-        logger.info("\n📤 ÉTAPE 2/3 : Chargement vers BigQuery")
+        logger.info("\nÉTAPE 2/3 : Chargement vers BigQuery")
         logger.info("-" * 80)
         
         try:
             step2_success = charger_batch_vers_bigquery()
             
             if step2_success:
-                logger.info("✅ Étape 2 : Chargement réussi")
+                logger.info("Étape 2 : Chargement réussi")
             else:
-                logger.error("❌ Étape 2 : Échec du chargement")
+                logger.error("Étape 2 : Échec du chargement")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Étape 2 : Erreur - {e}")
+            logger.error(f"Étape 2 : Erreur - {e}")
             return False
     else:
-        logger.info("\n⏭️  Étape 2 : Chargement ignoré")
+        logger.info("\n⏭️Étape 2 : Chargement ignoré")
     
     # ÉTAPE 3 : Transformation (vues)
     logger.info("\n🔄 ÉTAPE 3/3 : Transformation des données")
