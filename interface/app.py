@@ -375,10 +375,10 @@ def page_dashboard():
     st.markdown("Visualisez l'état actuel de vos données et des processus ETL en temps réel.")
     
     # Lien Looker Studio
-    looker_url = CONFIG.get('looker_studio_url', 'https://lookerstudio.google.com')
+    looker_url = CONFIG.get('looker_studio_url', 'https://lookerstudio.google.com/reporting/5a222634-0196-4b7c-aa28-60c249a4615f')
     col1, col2, col3 = st.columns([5, 2, 1])
     with col2:
-        st.link_button("Ouvrir Looker Studio", looker_url, use_container_width=True)
+        st.link_button("Voir Tableau de bord", looker_url, use_container_width=True)
     with col3:
         if st.button("Actualiser", use_container_width=True):
             st.rerun()
@@ -726,9 +726,9 @@ Ces vues utilisent le timestamp sélectionné pour filtrer les données.
                     st.balloons()
                     
                     # Lien Looker
-                    looker_url = CONFIG.get('looker_studio_url', 'https://lookerstudio.google.com')
+                    looker_url = CONFIG.get('looker_studio_url', 'https://lookerstudio.google.com/reporting/5a222634-0196-4b7c-aa28-60c249a4615f')
                     st.markdown("---")
-                    st.link_button("Ouvrir Looker Studio", looker_url, use_container_width=True)
+                    st.link_button("Voir Tableau de bord", looker_url, use_container_width=True)
                 else:
                     st.warning(f"Transformation partielle : {succes}/{total} vues créées")
                 
@@ -822,9 +822,9 @@ Vous pouvez ignorer certaines étapes si les données sont déjà présentes.
             st.balloons()
             
             # Lien Looker
-            looker_url = CONFIG.get('looker_studio_url', 'https://lookerstudio.google.com')
+            looker_url = CONFIG.get('looker_studio_url', 'https://lookerstudio.google.com/reporting/5a222634-0196-4b7c-aa28-60c249a4615f')
             st.markdown("---")
-            st.link_button("Ouvrir Looker Studio", looker_url, use_container_width=True)
+            st.link_button("Voir le Tableau de bord", looker_url, use_container_width=True)
         else:
             st.error("Pipeline terminé avec des erreurs")
 
