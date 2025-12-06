@@ -21,9 +21,31 @@ logger = logging.getLogger(__name__)
 # Fonctions utilitaires
 # ---------------------------------------------------------------------------
 
+def get_gcp_client():
+    """Initialise les clients GCP - détecte automatiquement l'\''environnement"""
+    try:
+        import streamlit as st
+        from google.oauth2 import service_account
+        if 'gcp' in st.secrets:
+            credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp"])
+            from google.cloud import storage, bigquery
+            storage_client = storage.Client(credentials=credentials, project=ENV['project_id'])
+            bigquery_client = bigquery.Client(credentials=credentials, project=ENV['project_id'])
+            return storage_client, bigquery_client
+    except Exception:
+        pass
+    
+    credentials_path = ENV.get('credentials', 'config/gcp-credentials.json')
+    if credentials_path and os.path.exists(credentials_path):
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+    
+    from google.cloud import storage, bigquery
+    return storage.Client(project=ENV['project_id']), bigquery.Client(project=ENV['project_id'])
+
+
 def creer_dataset_si_necessaire():
     """Crée le dataset BigQuery si nécessaire"""
-    client = bigquery.Client(project=ENV['project_id'])
+    client = get_gcp_client()
     dataset_ref = bigquery.Dataset(f"{ENV['project_id']}.{ENV['dataset']}")
     try:
         client.get_dataset(dataset_ref)
@@ -79,7 +101,7 @@ def lister_fichiers_par_timestamp(year_month: str = None, timestamp: str = None)
     """Liste les fichiers GCS groupés par timestamp"""
     if ENV['credentials']:
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = ENV['credentials']
-    client = storage.Client(project=ENV['project_id'])
+    client = get_gcp_client()
     bucket = client.bucket(ENV['bucket'])
     prefix = f"{CONFIG['storage']['raw_folder']}/" if not year_month else f"{CONFIG['storage']['raw_folder']}/{year_month}/"
     blobs = bucket.list_blobs(prefix=prefix)
@@ -101,7 +123,7 @@ def creer_table_si_necessaire(table_name: str):
     """Crée la table BigQuery si elle n'existe pas et ajoute les colonnes temporelles"""
     if ENV['credentials']:
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = ENV['credentials']
-    client = bigquery.Client(project=ENV['project_id'])
+    client = get_gcp_client()
     table_ref = f"{ENV['project_id']}.{ENV['dataset']}.{table_name}"
     try:
         table = client.get_table(table_ref)
@@ -126,7 +148,7 @@ def charger_fichier_vers_bigquery(source_info: Dict, extraction_datetime: dateti
     """Charge un fichier GCS vers BigQuery"""
     if ENV['credentials']:
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = ENV['credentials']
-    client = bigquery.Client(project=ENV['project_id'])
+    client = get_gcp_client()
     table_name = obtenir_nom_table(source_info['source'], 'raw')
     creer_table_si_necessaire(table_name)
     table_ref = f"{ENV['project_id']}.{ENV['dataset']}.{table_name}"

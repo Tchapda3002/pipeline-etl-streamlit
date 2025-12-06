@@ -10,6 +10,8 @@ from datetime import datetime
 import logging
 from typing import Dict, Optional
 import os
+from google.cloud import bigquery, storage
+import streamlit as st
 
 from config import CONFIG, ENV
 
@@ -18,47 +20,31 @@ logging.basicConfig(level=ENV.get('log_level', 'INFO'))
 logger = logging.getLogger(__name__)
 
 
-def get_storage_client():
-    """Initialise le client GCS - détecte automatiquement l'environnement"""
+def get_gcp_client():
+    """Initialise les clients GCP - détecte automatiquement l'\''environnement"""
+    try:
+        import streamlit as st
+        from google.oauth2 import service_account
+        if 'gcp' in st.secrets:
+            credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp"])
+            from google.cloud import storage, bigquery
+            storage_client = storage.Client(credentials=credentials, project=ENV['project_id'])
+            bigquery_client = bigquery.Client(credentials=credentials, project=ENV['project_id'])
+            return storage_client, bigquery_client
+    except Exception:
+        pass
     
-    # Détecter si on est sur Streamlit Cloud
-    is_streamlit_cloud = os.getenv('STREAMLIT_SHARING_MODE') is not None or \
-                        os.getenv('STREAMLIT_RUNTIME_ENV') == 'cloud'
-    
-    if is_streamlit_cloud:
-        # Environnement Streamlit Cloud : utiliser st.secrets
-        try:
-            import streamlit as st
-            from google.oauth2 import service_account
-            
-            if 'gcp' in st.secrets:
-                credentials = service_account.Credentials.from_service_account_info(
-                    st.secrets["gcp"]
-                )
-                logger.info("Utilisation des credentials Streamlit Cloud")
-                return storage.Client(credentials=credentials, project=ENV['project_id'])
-            else:
-                logger.error("Secrets GCP non configurés sur Streamlit Cloud")
-                raise ValueError("Secrets GCP manquants")
-        except ImportError:
-            logger.error("Streamlit non disponible en mode cloud")
-            raise
-    else:
-        # Environnement local : utiliser le fichier JSON
-        credentials_path = ENV.get('credentials', 'config/gcp-credentials.json')
-        
-        if not os.path.exists(credentials_path):
-            logger.error(f"Fichier credentials introuvable : {credentials_path}")
-            raise FileNotFoundError(f"Credentials manquantes : {credentials_path}")
-        
+    credentials_path = ENV.get('credentials', 'config/gcp-credentials.json')
+    if credentials_path and os.path.exists(credentials_path):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
-        logger.info(f"Utilisation des credentials locales : {credentials_path}")
-        return storage.Client(project=ENV['project_id'])
+    
+    from google.cloud import storage, bigquery
+    return storage.Client(project=ENV['project_id']), bigquery.Client(project=ENV['project_id'])
 
 
 def verifier_et_creer_bucket():
     """Vérifie que le bucket existe, sinon le crée"""
-    client = get_storage_client()
+    client = get_gcp_client()
     bucket_name = ENV['bucket']
     
     bucket = client.bucket(bucket_name)
@@ -112,7 +98,7 @@ def telecharger_et_streamer_vers_gcs(url: str, chemin_gcs: str, source_name: str
         logger.info(f"URL: {url[:80]}...")
         
         # Initialiser le client GCS
-        client = get_storage_client()
+        client = get_gcp_client()
         bucket = client.bucket(ENV['bucket'])
         blob = bucket.blob(chemin_gcs)
         

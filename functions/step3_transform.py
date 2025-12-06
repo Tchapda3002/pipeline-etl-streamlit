@@ -16,6 +16,21 @@ logging.basicConfig(level=ENV.get('log_level', 'INFO'))
 logger = logging.getLogger(__name__)
 
 
+def get_gcp_client():
+    """Initialise les clients GCP - détecte automatiquement l'\''environnement"""
+    try:
+        import streamlit as st
+        from google.oauth2 import service_account
+        if 'gcp' in st.secrets:
+            credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp"])
+            from google.cloud import storage, bigquery
+            storage_client = storage.Client(credentials=credentials, project=ENV['project_id'])
+            bigquery_client = bigquery.Client(credentials=credentials, project=ENV['project_id'])
+            return storage_client, bigquery_client
+    except Exception:
+        pass
+
+
 def obtenir_timestamps_disponibles() -> List[datetime]:
     """
     Récupère la liste des timestamps disponibles dans les tables raw
@@ -27,7 +42,7 @@ def obtenir_timestamps_disponibles() -> List[datetime]:
     if credentials_path and os.path.exists(credentials_path):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
     
-    client = bigquery.Client(project=ENV['project_id'])
+    client = get_gcp_client()
     
     query = f"""
     SELECT DISTINCT extraction_timestamp
@@ -152,7 +167,7 @@ def creer_vue(nom_vue: str, fichier_sql: str, timestamp: Optional[datetime] = No
     if credentials_path and os.path.exists(credentials_path):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
     
-    client = bigquery.Client(project=ENV['project_id'])
+    client = get_gcp_client()
     
     logger.info(f"Création de la vue : {nom_vue}")
     logger.info(f"  Fichier SQL : {fichier_sql}")
