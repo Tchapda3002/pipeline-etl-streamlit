@@ -205,35 +205,29 @@ st.markdown("""
 
 def get_gcp_client(client_type='storage'):
     """Initialise un client GCP - détecte automatiquement l'environnement"""
-    
-    # Détecter Streamlit Cloud : vérifier si st.secrets est accessible
     try:
         from google.oauth2 import service_account
         
-        # Si st.secrets["gcp"] existe, on est sur Streamlit Cloud
         if 'gcp' in st.secrets:
-            credentials = service_account.Credentials.from_service_account_info(
-                st.secrets["gcp"]
-            )
+            creds = service_account.Credentials.from_service_account_info(st.secrets["gcp"])
+            
             if client_type == 'storage':
-                return storage.Client(credentials=credentials, project=ENV['project_id'])
-            return bigquery.Client(credentials=credentials, project=ENV['project_id'])
-    except Exception:
+                return storage.Client(credentials=creds, project=ENV['project_id'])
+            else:
+                return bigquery.Client(credentials=creds, project=ENV['project_id'])
+    except:
         pass
     
-    # Sinon, environnement local : utiliser le fichier JSON
-    credentials_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-                                    'config', 'gcp-credentials.json')
+    creds_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+                              'config', 'gcp-credentials.json')
     
-    if not os.path.exists(credentials_path):
-        st.error(f"Fichier credentials introuvable : {credentials_path}")
-        return None
-    
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+    if os.path.exists(creds_path):
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
     
     if client_type == 'storage':
         return storage.Client(project=ENV['project_id'])
-    return bigquery.Client(project=ENV['project_id'])
+    else:
+        return bigquery.Client(project=ENV['project_id'])
 
 
 def lister_batchs_disponibles() -> List[Dict]:

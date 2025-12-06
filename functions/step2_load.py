@@ -21,31 +21,34 @@ logger = logging.getLogger(__name__)
 # Fonctions utilitaires
 # ---------------------------------------------------------------------------
 
-def get_gcp_client():
-    """Initialise les clients GCP - détecte automatiquement l'\''environnement"""
+def get_gcp_client(client_type='bigquery'):
+    """Initialise un client GCP - détecte automatiquement l'environnement"""
     try:
         import streamlit as st
         from google.oauth2 import service_account
         if 'gcp' in st.secrets:
-            credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp"])
-            from google.cloud import storage, bigquery
-            storage_client = storage.Client(credentials=credentials, project=ENV['project_id'])
-            bigquery_client = bigquery.Client(credentials=credentials, project=ENV['project_id'])
-            return storage_client, bigquery_client
-    except Exception:
+            creds = service_account.Credentials.from_service_account_info(st.secrets["gcp"])
+            
+            if client_type == 'storage':
+                return storage.Client(credentials=creds, project=ENV['project_id'])
+            else:
+                return bigquery.Client(credentials=creds, project=ENV['project_id'])
+    except:
         pass
     
-    credentials_path = ENV.get('credentials', 'config/gcp-credentials.json')
-    if credentials_path and os.path.exists(credentials_path):
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+    creds_path = ENV.get('credentials', 'config/gcp-credentials.json')
+    if creds_path and os.path.exists(creds_path):
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
     
-    from google.cloud import storage, bigquery
-    return storage.Client(project=ENV['project_id']), bigquery.Client(project=ENV['project_id'])
+    if client_type == 'storage':
+        return storage.Client(project=ENV['project_id'])
+    else:
+        return bigquery.Client(project=ENV['project_id'])
 
 
 def creer_dataset_si_necessaire():
     """Crée le dataset BigQuery si nécessaire"""
-    client = get_gcp_client()
+    client = get_gcp_client('bigquery')
     dataset_ref = bigquery.Dataset(f"{ENV['project_id']}.{ENV['dataset']}")
     try:
         client.get_dataset(dataset_ref)
@@ -56,18 +59,9 @@ def creer_dataset_si_necessaire():
         client.create_dataset(dataset)
         logger.info(f"Dataset créé : {ENV['dataset']}")
 
+
 def obtenir_nom_table(source_name: str, table_type: str = 'raw') -> str:
-    """
-    Retourne le nom de la table BigQuery pour une source donnée
-    Version adaptée au YAML avec raw_tables et transformed_tables
-    
-    Args:
-        source_name: Nom de la source (ex: "ratios_inpi")
-        table_type: Type de table ('raw' ou 'transformed')
-    
-    Returns:
-        str: Nom de la table
-    """
+    """Retourne le nom de la table BigQuery pour une source donnée"""
     if table_type == 'raw':
         pattern = CONFIG['bigquery']['raw_tables']['pattern']
     elif table_type == 'transformed':
@@ -97,11 +91,10 @@ def extraire_infos_fichier(blob_name: str) -> Optional[Dict]:
         'blob_name': blob_name
     }
 
+
 def lister_fichiers_par_timestamp(year_month: str = None, timestamp: str = None) -> Dict[str, List[Dict]]:
     """Liste les fichiers GCS groupés par timestamp"""
-    if ENV['credentials']:
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = ENV['credentials']
-    client = get_gcp_client()
+    client = get_gcp_client('storage')
     bucket = client.bucket(ENV['bucket'])
     prefix = f"{CONFIG['storage']['raw_folder']}/" if not year_month else f"{CONFIG['storage']['raw_folder']}/{year_month}/"
     blobs = bucket.list_blobs(prefix=prefix)
@@ -119,11 +112,10 @@ def lister_fichiers_par_timestamp(year_month: str = None, timestamp: str = None)
         fichiers_par_timestamp.setdefault(ts, []).append(infos)
     return fichiers_par_timestamp
 
+
 def creer_table_si_necessaire(table_name: str):
     """Crée la table BigQuery si elle n'existe pas et ajoute les colonnes temporelles"""
-    if ENV['credentials']:
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = ENV['credentials']
-    client = get_gcp_client()
+    client = get_gcp_client('bigquery')
     table_ref = f"{ENV['project_id']}.{ENV['dataset']}.{table_name}"
     try:
         table = client.get_table(table_ref)
@@ -140,15 +132,14 @@ def creer_table_si_necessaire(table_name: str):
     except Exception:
         logger.info(f"Table {table_name} sera créée au premier chargement")
 
+
 # ---------------------------------------------------------------------------
 # Chargement
 # ---------------------------------------------------------------------------
 
 def charger_fichier_vers_bigquery(source_info: Dict, extraction_datetime: datetime) -> bool:
     """Charge un fichier GCS vers BigQuery"""
-    if ENV['credentials']:
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = ENV['credentials']
-    client = get_gcp_client()
+    client = get_gcp_client('bigquery')
     table_name = obtenir_nom_table(source_info['source'], 'raw')
     creer_table_si_necessaire(table_name)
     table_ref = f"{ENV['project_id']}.{ENV['dataset']}.{table_name}"
@@ -179,6 +170,7 @@ def charger_fichier_vers_bigquery(source_info: Dict, extraction_datetime: dateti
     except Exception as e:
         logger.error(f"Erreur chargement {source_info['source']} : {e}")
         return False
+
 
 def charger_batch_vers_bigquery(timestamp: str = None, date: str = None) -> bool:
     """Charge tous les fichiers d'un batch vers BigQuery"""
@@ -226,23 +218,35 @@ def charger_batch_vers_bigquery(timestamp: str = None, date: str = None) -> bool
     logger.info("=" * 80)
     return all(resultats)
 
+
 # ---------------------------------------------------------------------------
 # Point d'entrée
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import sys
+    
     if len(sys.argv) > 1:
-        cmd = sys.argv[1]
+        cmd = sys.argv[1].lower()
+        
         if cmd == "list":
             year_month = sys.argv[2] if len(sys.argv) > 2 else None
             fichiers = lister_fichiers_par_timestamp(year_month)
-            for ts, batch in fichiers.items():
-                logger.info(f"Batch {ts}: {len(batch)} fichiers")
+            print(f"\n{len(fichiers)} batch(s) trouvé(s) :\n")
+            for ts, batch in sorted(fichiers.items(), reverse=True):
+                print(f"  {ts}: {len(batch)} fichier(s)")
+        
         elif cmd == "load":
             ts = sys.argv[2] if len(sys.argv) > 2 else None
             charger_batch_vers_bigquery(timestamp=ts)
+        
         else:
-            print("Usage: python -m functions.step2_load [list YYYY-MM | load [TIMESTAMP]]")
+            print(f"Commande inconnue : {cmd}")
+            print("\nUsage:")
+            print("  python -m functions.step2_load                    # Charge le batch le plus récent")
+            print("  python -m functions.step2_load list               # Liste tous les batchs")
+            print("  python -m functions.step2_load list 2024-12       # Liste les batchs de déc 2024")
+            print("  python -m functions.step2_load load <TIMESTAMP>   # Charge un batch spécifique")
     else:
+        # Sans argument : charge le batch le plus récent
         charger_batch_vers_bigquery()
