@@ -33,7 +33,7 @@ ENV = {
     'bucket': CONFIG['storage']['bucket_name'],
     'dataset': CONFIG['bigquery']['dataset'],
     'credentials': CONFIG['gcp']['credentials_path'],
-    'log_level': 'INFO'  # ← AJOUTER
+    'log_level': 'INFO'
 }
 
 # Configuration de la page
@@ -312,6 +312,18 @@ def main():
     st.markdown('<h1 class="main-title">Pipeline ETL</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Gestion moderne des données BigQuery</p>', unsafe_allow_html=True)
     
+    # Bouton Stop global
+    col1, col2, col3 = st.columns([5, 1, 1])
+    with col2:
+        if st.button("🛑 STOP", type="secondary", use_container_width=True, key="global_stop"):
+            st.session_state.stop_requested = True
+            st.error("Arrêt demandé. Les processus en cours vont s'arrêter.")
+            st.rerun()
+    
+    # Initialiser l'état stop
+    if 'stop_requested' not in st.session_state:
+        st.session_state.stop_requested = False
+    
     # Navigation horizontale (tabs)
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Dashboard", 
@@ -505,10 +517,20 @@ def page_extraction():
     st.markdown("---")
     
     if st.button("Lancer l'extraction", use_container_width=True, type="primary"):
+        # Reset stop
+        st.session_state.stop_requested = False
+        
         source = None if choix == "Toutes" else choix
         
         with st.spinner("Extraction en cours..."):
             progress = st.progress(0)
+            
+            # Vérifier stop
+            if st.session_state.get('stop_requested', False):
+                st.warning("Extraction annulée par l'utilisateur")
+                progress.empty()
+                return
+            
             resultats = download_data(source_name=source)
             progress.progress(100)
             
@@ -578,10 +600,20 @@ def page_chargement():
     st.markdown("---")
     
     if st.button("Lancer le chargement", use_container_width=True, type="primary"):
+        # Reset stop
+        st.session_state.stop_requested = False
+        
         timestamp = batch_dict[choix]
         
         with st.spinner("Chargement en cours..."):
             progress = st.progress(0)
+            
+            # Vérifier stop
+            if st.session_state.get('stop_requested', False):
+                st.warning("Chargement annulé par l'utilisateur")
+                progress.empty()
+                return
+            
             success = charger_batch_vers_bigquery(timestamp=timestamp)
             progress.progress(100)
             
@@ -640,10 +672,20 @@ Ces vues utilisent le timestamp sélectionné pour filtrer les données.
     st.markdown("---")
     
     if st.button("Créer les vues", use_container_width=True, type="primary"):
+        # Reset stop
+        st.session_state.stop_requested = False
+        
         timestamp = ts_dict[choix]
         
         with st.spinner("Transformation en cours..."):
             progress = st.progress(0)
+            
+            # Vérifier stop
+            if st.session_state.get('stop_requested', False):
+                st.warning("Transformation annulée par l'utilisateur")
+                progress.empty()
+                return
+            
             resultats = transform_data(timestamp=timestamp)
             progress.progress(100)
             
@@ -713,6 +755,9 @@ Vous pouvez ignorer certaines étapes si les données sont déjà présentes.
     st.markdown("---")
     
     if st.button("Lancer le pipeline", use_container_width=True, type="primary"):
+        # Reset stop
+        st.session_state.stop_requested = False
+        
         src = None if source == "Toutes" else source
         
         start = datetime.now()
@@ -720,11 +765,23 @@ Vous pouvez ignorer certaines étapes si les données sont déjà présentes.
         
         progress = st.progress(0)
         
+        # Vérifier stop avant de lancer
+        if st.session_state.get('stop_requested', False):
+            st.warning("Pipeline annulé par l'utilisateur")
+            progress.empty()
+            return
+        
         success = run_pipeline(
             source_name=src,
             skip_download=skip1,
             skip_load=skip2
         )
+        
+        # Vérifier stop après exécution
+        if st.session_state.get('stop_requested', False):
+            st.warning("Pipeline interrompu par l'utilisateur")
+            progress.empty()
+            return
         
         progress.progress(100)
         
