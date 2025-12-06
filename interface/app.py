@@ -206,19 +206,15 @@ st.markdown("""
 
 def get_gcp_client(client_type='storage'):
     if 'gcp' in st.secrets:
-        # Utiliser secrets Streamlit
         credentials = service_account.Credentials.from_service_account_info(
             st.secrets["gcp"]
         )
+        if client_type == 'storage':
+            return storage.Client(credentials=credentials, project=ENV['project_id'])
+        return bigquery.Client(credentials=credentials, project=ENV['project_id'])
     else:
-        # Fallback local
-        credentials_path = 'config/gcp-credentials.json'
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
-
-    
-    if client_type == 'storage':
-        return storage.Client(project=ENV['project_id'])
-    return bigquery.Client(project=ENV['project_id'])
+        st.error("Credentials GCP manquantes dans les secrets")
+        return None
 
 
 def lister_batchs_disponibles() -> List[Dict]:
