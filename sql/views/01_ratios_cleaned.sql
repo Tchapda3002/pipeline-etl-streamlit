@@ -8,6 +8,7 @@ FROM `{project_id}.{dataset}.ratios_inpi_raw` AS cp
 WHERE 
     cp.siren IS NOT NULL
     AND cp.chiffre_d_affaires IS NOT NULL
+    AND cp.date_cloture_exercice IS NOT NULL
     AND cp.marge_brute IS NOT NULL
     AND cp.ebe IS NOT NULL
     AND cp.ebit IS NOT NULL

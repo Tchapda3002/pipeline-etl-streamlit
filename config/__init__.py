@@ -1,6 +1,5 @@
 """
 Package config - Gestion de la configuration
-Charge automatiquement config.yaml et les variables d'environnement
 """
 
 import yaml

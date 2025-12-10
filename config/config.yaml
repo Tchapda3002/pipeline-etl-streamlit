@@ -58,6 +58,7 @@ columns:
     - siren
     - nomUniteLegale
     - trancheEffectifsUniteLegale
+    - date_cloture_exercice
     - categorieEntreprise
     - etatAdministratifUniteLegale
     - categorieJuridiqueUniteLegale
@@ -84,17 +85,43 @@ columns:
     - credit_clients_jours
     - credit_fournisseurs_jours
     - type_bilan
-    - recoded_macro_section
     - confidentiality
     - extraction_timestamp
-    - categorie_juridique_niveau_I,
-    - recoded_activite_principale_unite_legale,
-    - sl.original_activite_principale_unite_legale,
-    - sl.categorie_effectif,
-    - sl.categorie_entreprise_recodee,
-    - sl.ess_recodee,
-    - sl.etat_administratif_recoded
+    - siren
+    - nomUniteLegale
+    - categorieJuridique
+    - secteur_activite
+    - categorie_effectif
+    - categorie_entreprise
+    - ess_recodee
+    - etat_administratif
+    - extraction_timestamp
     - extraction_date
+    - marge_brute_sur_ca
+    - resultat_net_sur_ca
+    - classe_marge_ebe
+    - zone_solvabilite
+    - alerte_endettement_flag
+    - alerte_autonomie_flag
+    - alerte_solvabilite
+    - zone_liquidite
+    - alerte_liquidite_flag
+    - classe_caf_sur_ca
+    - zone_capacite_remboursement
+    - cycle_conversion_tresorerie_jours
+    - zone_bfr_jours
+    - alerte_bfr
+    - classe_bfr_jours
+    - zone_rotation_stocks
+    - zone_credit_clients
+    - zone_credit_fournisseurs
+    - alerte_resultat_net_negatif
+    - alerte_remboursement_flag
+    - nb_alertes_dures
+    - score_risque_simple
+    - classe_risque_globale
+    - signal_risque
+    
  
 
 # Historisation (SIMPLE)

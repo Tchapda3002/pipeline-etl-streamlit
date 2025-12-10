@@ -19,8 +19,8 @@ except ImportError:
     pass
 
 try:
-    from .step3_transform import transform_data
-    __all__.append("transform_data")
+    from .step3_transform import transform_data, obtenir_timestamps_disponibles
+    __all__.append("transform_data", "obtenir_timestamps_disponibles")
 except ImportError:
     pass
 

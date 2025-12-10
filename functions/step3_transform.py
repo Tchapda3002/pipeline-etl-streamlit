@@ -235,7 +235,7 @@ if __name__ == "__main__":
             if timestamps:
                 print(f"\n{len(timestamps)} timestamp(s) trouvé(s) :\n")
                 for i, ts in enumerate(timestamps, 1):
-                    marker = "⭐ (plus récent)" if i == 1 else ""
+                    marker = "(plus récent)" if i == 1 else ""
                     print(f"{i:2d}. {ts.strftime('%Y-%m-%d %H:%M:%S')} {marker}")
                 print(f"\n{'=' * 80}")
             else:
@@ -248,7 +248,7 @@ if __name__ == "__main__":
             
             print("\n" + "=" * 80)
             for vue, succes in resultats.items():
-                status = "✅ SUCCESS" if succes else "❌ FAILED"
+                status = "SUCCESS" if succes else "FAILED"
                 print(f"  {vue}: {status}")
             print("=" * 80)
         

@@ -9,6 +9,7 @@ from datetime import datetime
 
 from functions.step1_download import download_data
 from functions.step2_load import charger_batch_vers_bigquery
+from functions.step3_transform import transform_data, obtenir_timestamps_disponibles
 
 from config import ENV
 
@@ -25,31 +26,7 @@ def run_pipeline(
     skip_download: bool = False,
     skip_load: bool = False
 ) -> bool:
-    """
-    Exécute le pipeline ETL complet
     
-    Args:
-        source_name: Source spécifique à télécharger (None = toutes)
-        timestamp_filter: Timestamp pour filtrer les vues (None = le plus récent)
-        skip_download: Si True, ignore l'étape 1 (téléchargement)
-        skip_load: Si True, ignore l'étape 2 (chargement BigQuery)
-    
-    Returns:
-        bool: True si tout s'est bien passé
-    
-    Usage:
-        # Pipeline complet
-        run_pipeline()
-        
-        # Télécharger une seule source
-        run_pipeline(source_name='ratios_inpi')
-        
-        # Sauter le téléchargement (données déjà présentes)
-        run_pipeline(skip_download=True)
-        
-        # Transformation avec un timestamp spécifique
-        run_pipeline(skip_download=True, skip_load=True, timestamp_filter='2024-12-05T10:00:00')
-    """
     start_time = datetime.now()
     
     logger.info("=" * 80)
@@ -98,10 +75,10 @@ def run_pipeline(
             logger.error(f"Étape 2 : Erreur - {e}")
             return False
     else:
-        logger.info("\n⏭️Étape 2 : Chargement ignoré")
+        logger.info("\n Étape 2 : Chargement ignoré")
     
     # ÉTAPE 3 : Transformation (vues)
-    logger.info("\n🔄 ÉTAPE 3/3 : Transformation des données")
+    logger.info("\n ÉTAPE 3/3 : Transformation des données")
     logger.info("-" * 80)
     
     try:
@@ -109,13 +86,13 @@ def run_pipeline(
         step3_success = all(resultats.values()) if resultats else False
         
         if step3_success:
-            logger.info("✅ Étape 3 : Transformation réussie")
+            logger.info(" Étape 3 : Transformation réussie")
         else:
-            logger.error("❌ Étape 3 : Échec de la transformation")
+            logger.error(" Étape 3 : Échec de la transformation")
             success = False
             
     except Exception as e:
-        logger.error(f"❌ Étape 3 : Erreur - {e}")
+        logger.error(f"Étape 3 : Erreur - {e}")
         success = False
     
     # Résumé
@@ -127,9 +104,9 @@ def run_pipeline(
     logger.info(f"Durée : {duration:.2f}s ({duration/60:.2f} minutes)")
     
     if success:
-        logger.info("Statut : ✅ SUCCÈS")
+        logger.info("Statut : SUCCÈS")
     else:
-        logger.info("Statut : ❌ ÉCHEC")
+        logger.info("Statut : ÉCHEC")
     
     logger.info("=" * 80)
     
@@ -138,21 +115,21 @@ def run_pipeline(
 
 def run_step1_only(source_name: Optional[str] = None) -> bool:
     """Exécute seulement l'étape 1 (téléchargement)"""
-    logger.info("📥 Exécution : Étape 1 uniquement (Téléchargement)")
+    logger.info(" Exécution : Étape 1 uniquement (Téléchargement)")
     
     try:
         resultats = download_data(source_name)
         success = all(resultats.values()) if resultats else False
         
         if success:
-            logger.info("✅ Téléchargement réussi")
+            logger.info(" Téléchargement réussi")
         else:
-            logger.error("❌ Téléchargement échoué")
+            logger.error(" Téléchargement échoué")
         
         return success
         
     except Exception as e:
-        logger.error(f"❌ Erreur : {e}")
+        logger.error(f" Erreur : {e}")
         return False
 
 
@@ -164,14 +141,14 @@ def run_step2_only(timestamp: Optional[str] = None, date: Optional[str] = None) 
         success = charger_batch_vers_bigquery(timestamp=timestamp, date=date)
         
         if success:
-            logger.info("✅ Chargement réussi")
+            logger.info(" Chargement réussi")
         else:
-            logger.error("❌ Chargement échoué")
+            logger.error(" Chargement échoué")
         
         return success
         
     except Exception as e:
-        logger.error(f"❌ Erreur : {e}")
+        logger.error(f" Erreur : {e}")
         return False
 
 
@@ -184,7 +161,7 @@ def run_step3_only(timestamp_filter: Optional[str] = None, list_only: bool = Fal
         list_only: Si True, liste uniquement les timestamps sans créer de vues
     """
     if list_only:
-        logger.info("📋 Liste des timestamps disponibles")
+        logger.info(" Liste des timestamps disponibles")
         logger.info("-" * 80)
         
         try:
@@ -193,7 +170,7 @@ def run_step3_only(timestamp_filter: Optional[str] = None, list_only: bool = Fal
             if timestamps:
                 logger.info(f"\n{len(timestamps)} timestamp(s) trouvé(s) :\n")
                 for i, ts in enumerate(timestamps, 1):
-                    marker = "⭐ (plus récent)" if i == 1 else ""
+                    marker = "(plus récent)" if i == 1 else ""
                     logger.info(f"  {i:2d}. {ts.strftime('%Y-%m-%d %H:%M:%S')} {marker}")
                 return True
             else:
@@ -201,25 +178,25 @@ def run_step3_only(timestamp_filter: Optional[str] = None, list_only: bool = Fal
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Erreur : {e}")
+            logger.error(f"Erreur : {e}")
             return False
     
     else:
-        logger.info("🔄 Exécution : Étape 3 uniquement (Transformation)")
+        logger.info("Exécution : Étape 3 uniquement (Transformation)")
         
         try:
             resultats = transform_data(timestamp=timestamp_filter)
             success = all(resultats.values()) if resultats else False
             
             if success:
-                logger.info("✅ Transformation réussie")
+                logger.info("Transformation réussie")
             else:
-                logger.error("❌ Transformation échouée")
+                logger.error("Transformation échouée")
             
             return success
             
         except Exception as e:
-            logger.error(f"❌ Erreur : {e}")
+            logger.error(f"Erreur : {e}")
             return False
 
 
