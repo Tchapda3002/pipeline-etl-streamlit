@@ -122,6 +122,10 @@ columns:
     - classe_risque_globale
     - signal_risque
     - sexeUniteLegale
+    - taux_croissance_ca
+    - chiffre_d_affaires_n1
+    - resultat_net_n1
+    - taux_croissance_resulat_net
     
  
 

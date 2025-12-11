@@ -138,12 +138,53 @@ ratios_with_classe AS (
             ELSE 'OK'
         END AS signal_risque
     FROM ratios_enriched
+),
+
+ca_n1 AS (
+    SELECT 
+        v.*,
+        
+        -- CA de l'exercice précédent
+        LAG(v.chiffre_d_affaires) OVER (
+            PARTITION BY v.siren 
+            ORDER BY v.date_cloture_exercice
+        ) AS chiffre_d_affaires_n1,
+        
+        -- Résultat net de l'exercice précédent
+        LAG(v.resultat_net) OVER (
+            PARTITION BY v.siren 
+            ORDER BY v.date_cloture_exercice
+        ) AS resultat_net_n1,
+        
+        -- Taux de croissance CA
+        SAFE_DIVIDE(
+            v.chiffre_d_affaires - LAG(v.chiffre_d_affaires) OVER (
+                PARTITION BY v.siren ORDER BY v.date_cloture_exercice
+            ),
+            LAG(v.chiffre_d_affaires) OVER (
+                PARTITION BY v.siren ORDER BY v.date_cloture_exercice
+            )
+        ) * 100 AS taux_croissance_ca,  -- ✅ VIRGULE AJOUTÉE ICI
+
+        -- Taux de croissance resultat net
+        SAFE_DIVIDE(
+            v.resultat_net - LAG(v.resultat_net) OVER (
+                PARTITION BY v.siren ORDER BY v.date_cloture_exercice
+            ),
+            LAG(v.resultat_net) OVER (
+                PARTITION BY v.siren ORDER BY v.date_cloture_exercice
+            )
+        ) * 100 AS taux_croissance_resultat_net  -- ✅ ORTHOGRAPHE CORRIGÉE (2 "t")
+
+    FROM ratios_with_classe AS v
 )
 
 -- Jointure finale avec la table stock
 SELECT
     r.*,
     s.* EXCEPT(siren, extraction_timestamp, extraction_date)
-FROM ratios_with_classe r
+FROM ca_n1 r
 INNER JOIN `{project_id}.{dataset}.v_stock_cleaned` s
-    ON r.siren = s.siren;
+    ON r.siren = s.siren
+WHERE r.date_cloture_exercice BETWEEN DATE('2000-01-01') AND DATE('2025-12-31')
+  AND r.chiffre_d_affaires >= 0;
