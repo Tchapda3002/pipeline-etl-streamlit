@@ -8,7 +8,10 @@
 
 ## 👤 Auteur
 
-**Tchapda Wilfred**, **Pape Magette DIOP**, **Soumaya WADE**, **Naba TOURE**
+- **TCHAPDA KOUADJO Wilfred Rod**
+- **Pape Magette DIOP**
+- **Fatou Soumaya WADE**
+- **Naba Ahmadou Seydou TOURE**
 
 ## 🎯 Vue d'ensemble
 
