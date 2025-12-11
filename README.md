@@ -1,4 +1,4 @@
-# 📊 Pipeline ELT BigQuery avec Streamlit
+# 📊 Projet 8: Analyse des KPIs fianciers à l'aide de Google Data Studio (Looker Studio) et big Query
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)
