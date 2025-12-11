@@ -6,6 +6,10 @@
 
 > Pipeline ETL moderne avec interface Streamlit pour l'extraction, le chargement et la transformation de données vers BigQuery
 
+## 👤 Auteur
+
+**Tchapda Wilfred**, **Pape Magette DIOP**, **Soumaya WADE**, **Naba TOURE**
+
 ## 🎯 Vue d'ensemble
 
 Ce projet implémente un pipeline ELT (Extract, Load, Transform) complet avec une interface web moderne développée en Streamlit. Il permet d'automatiser le flux de données depuis des sources externes (Data.gouv, INPI) vers Google BigQuery, en passant par Google Cloud Storage pour en suite permettre une visualisation des KPI financiers sur looker studio.
@@ -688,12 +692,6 @@ data/
 *.parquet
 *.csv
 ```
-
-
-
-## 👤 Auteur
-
-**Tchapda Wilfred**, **Pape Magette DIOP**, **Soumaya WADE**, **Naba TOURE**
 
 
 - Repository: [pipeline-etl-streamlit](https://github.com/Tchapda3002/pipeline-etl-streamlit)
