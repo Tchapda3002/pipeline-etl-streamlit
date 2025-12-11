@@ -17,6 +17,38 @@
 
 Ce projet implémente un pipeline ELT (Extract, Load, Transform) complet avec une interface web moderne développée en Streamlit. Il permet d'automatiser le flux de données depuis des sources externes (Data.gouv, INPI) vers Google BigQuery, en passant par Google Cloud Storage pour en suite permettre une visualisation des KPI financiers sur looker studio.
 
+
+## 📦 Structure du Projet
+
+```
+pipeline-etl-streamlit/
+├── config/
+│   ├── __init__.py
+│   ├── config.yaml              # Configuration principale
+│   └── gcp-credentials.json     # Clés GCP (non versionné)
+│
+├── functions/
+│   ├── __init__.py
+│   ├── step1_download.py        # Extraction des données
+│   ├── step2_load.py            # Chargement BigQuery
+│   ├── step3_transform.py       # Transformation SQL
+│   └── orchestrator.py          # Orchestration du pipeline
+│
+├── interface/
+│   ├──app.py                    # Application web Streamlit
+│   └── .streamlit/
+│        ├── config.toml
+│        ├── secrets.toml
+│           
+├── venv/                        # Environnement virtuel
+├── .env                         # Variables d'environnement
+├── requirements.txt             # Dépendances Python
+├── README.md                    # Documentation
+├── Links.md                     # Tous les liens du projet (A consulter automatiquement)
+├── Dockerfile.streamlit         # Conteneur pour l'application streamlit
+└── .gitignore                   # Fichiers à ignorer
+```
+
 ### ✨ Fonctionnalités principales
 
 - **Extraction automatisée** - Téléchargement des données depuis Data.gouv et l'INPI
@@ -86,35 +118,7 @@ Ce projet implémente un pipeline ELT (Extract, Load, Transform) complet avec un
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 📦 Structure du Projet
 
-```
-pipeline-etl-streamlit/
-├── config/
-│   ├── __init__.py
-│   ├── config.yaml              # Configuration principale
-│   └── gcp-credentials.json     # Clés GCP (non versionné)
-│
-├── functions/
-│   ├── __init__.py
-│   ├── step1_download.py        # Extraction des données
-│   ├── step2_load.py            # Chargement BigQuery
-│   ├── step3_transform.py       # Transformation SQL
-│   └── orchestrator.py          # Orchestration du pipeline
-│
-├── interface/
-│   ├──app.py                    # Application web Streamlit
-│   └── .streamlit/
-│        ├── config.toml
-│        ├── secrets.toml
-│           
-├── venv/                        # Environnement virtuel
-├── .env                         # Variables d'environnement
-├── requirements.txt             # Dépendances Python
-├── README.md                    # Documentation
-├── Dockerfile.streamlit         # Conteneur pour l'application streamlit
-└── .gitignore                   # Fichiers à ignorer
-```
 
 ## 🚀 Installation
 
